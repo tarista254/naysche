@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simple 2FA Generator</title>
+  <script src="https://cdn.jsdelivr.net/npm/otplib@12.0.1/otplib-browser.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+  <div class="bg-white shadow-xl rounded-xl p-6 w-full max-w-md">
+    <h1 class="text-2xl font-bold mb-4 text-center">🔐 Simple 2FA Generator</h1>
+
+    <input id="secretInput" type="text" placeholder="Enter secret key" class="w-full p-2 border rounded mb-4" />
+    <button onclick="startGenerator()" class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700">Generate</button>
+
+    <div id="result" class="mt-6 hidden">
+      <p class="text-gray-600">Your current code:</p>
+      <h2 id="code" class="text-4xl font-mono mt-2 mb-2"></h2>
+      <p class="text-sm text-gray-500">Refreshing every 30 seconds</p>
+    </div>
+  </div>
+
+  <script>
+    const secretInput = document.getElementById('secretInput');
+    const codeEl = document.getElementById('code');
+    const resultEl = document.getElementById('result');
+
+    function updateCode(secret) {
+      try {
+        const code = otplib.authenticator.generate(secret);
+        codeEl.textContent = code;
+      } catch (err) {
+        codeEl.textContent = 'Invalid secret';
+      }
+    }
+
+    function startGenerator() {
+      const secret = secretInput.value.trim();
+      if (!secret) return alert('Please enter a secret key.');
+
+      resultEl.classList.remove('hidden');
+      updateCode(secret);
+
+      setInterval(() => {
+        updateCode(secret);
+      }, 1000);
+    }
+
+    // Auto-fill from URL hash (like 2fa.live/#SECRETKEY)
+    window.addEventListener('DOMContentLoaded', () => {
+      const hashSecret = window.location.hash.slice(1);
+      if (hashSecret) {
+        secretInput.value = hashSecret;
+        startGenerator();
+      }
+    });
+  </script>
+</body>
+</html>
